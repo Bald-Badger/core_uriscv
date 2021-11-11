@@ -3,19 +3,13 @@ module tb_top;
 reg clk;
 reg rst;
 
-reg [7:0] mem[65535:0];
+reg [7:0] mem[0:65535];
 integer i;
 integer f;
 
 initial
 begin
     $display("Starting bench");
-
-    if (`TRACE)
-    begin
-        $dumpfile("waveform.vcd");
-        $dumpvars(0, tb_top);
-    end
 
     // Reset
     clk = 0;
@@ -27,7 +21,7 @@ begin
     for (i=0;i<65535;i=i+1)
         mem[i] = 0;
 
-    f = $fopenr("./build/tcm.bin");
+    f = $fopen("tcm.bin","r");
     i = $fread(mem, f);
     for (i=0;i<65535;i=i+1)
         u_mem.write(i, mem[i]);
@@ -41,28 +35,28 @@ begin
     end
 end
 
-wire          mem_i_rd_w;
-wire          mem_i_flush_w;
-wire          mem_i_invalidate_w;
-wire [ 31:0]  mem_i_pc_w;
-wire [ 31:0]  mem_d_addr_w;
-wire [ 31:0]  mem_d_data_wr_w;
-wire          mem_d_rd_w;
-wire [  3:0]  mem_d_wr_w;
-wire          mem_d_cacheable_w;
-wire [ 10:0]  mem_d_req_tag_w;
-wire          mem_d_invalidate_w;
-wire          mem_d_writeback_w;
-wire          mem_d_flush_w;
-wire          mem_i_accept_w;
-wire          mem_i_valid_w;
-wire          mem_i_error_w;
-wire [ 31:0]  mem_i_inst_w;
-wire [ 31:0]  mem_d_data_rd_w;
-wire          mem_d_accept_w;
-wire          mem_d_ack_w;
-wire          mem_d_error_w;
-wire [ 10:0]  mem_d_resp_tag_w;
+logic          mem_i_rd_w;
+logic          mem_i_flush_w;
+logic          mem_i_invalidate_w;
+logic [ 31:0]  mem_i_pc_w;
+logic [ 31:0]  mem_d_addr_w;
+logic [ 31:0]  mem_d_data_wr_w;
+logic          mem_d_rd_w;
+logic [  3:0]  mem_d_wr_w;
+logic          mem_d_cacheable_w;
+logic [ 10:0]  mem_d_req_tag_w;
+logic          mem_d_invalidate_w;
+logic          mem_d_writeback_w;
+logic          mem_d_flush_w;
+logic          mem_i_accept_w;
+logic          mem_i_valid_w;
+logic          mem_i_error_w;
+logic [ 31:0]  mem_i_inst_w;
+logic [ 31:0]  mem_d_data_rd_w;
+logic          mem_d_accept_w;
+logic          mem_d_ack_w;
+logic          mem_d_error_w;
+logic [ 10:0]  mem_d_resp_tag_w;
 
 riscv_core
 u_dut

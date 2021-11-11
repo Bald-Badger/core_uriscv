@@ -1,2 +1,9 @@
 waveform.vcd
 *.out
+work/
+workspace.code-workspace
+*.mti
+*.mpf
+*.bin
+*.wlf
+*.mpf_new

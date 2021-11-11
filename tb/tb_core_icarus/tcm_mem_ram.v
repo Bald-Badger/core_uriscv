@@ -25,7 +25,7 @@ module tcm_mem_ram
 // Mode: Read First
 //-----------------------------------------------------------------
 /* verilator lint_off MULTIDRIVEN */
-reg [31:0]   ram [16383:0] /*verilator public*/;
+reg [31:0]   ram [0:16383] /*verilator public*/;
 /* verilator lint_on MULTIDRIVEN */
 
 reg [31:0] ram_read0_q;

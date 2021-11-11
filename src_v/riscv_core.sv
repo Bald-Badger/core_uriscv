@@ -115,18 +115,24 @@ localparam           ADDR_PAD_W          = 0;
 
 // Current state
 localparam           STATE_W           = 3;
-localparam           STATE_RESET       = 0;
-localparam           STATE_FETCH_WB    = 1;
-localparam           STATE_EXEC        = 2;
-localparam           STATE_MEM         = 3;
-localparam           STATE_DECODE      = 4; // Only if SUPPORT_BRAM_REGFILE = 1
+
+typedef enum logic[STATE_W-1:0] {
+	STATE_RESET		= 0,
+	STATE_FETCH_WB	= 1,
+	STATE_EXEC		= 2,
+	STATE_MEM		= 3,
+	STATE_DECODE	= 4 // Only if SUPPORT_BRAM_REGFILE = 1
+} state_q_t;
+
 
 //-----------------------------------------------------------------
 // Registers
 //-----------------------------------------------------------------
 
 // Current state
-reg [STATE_W-1:0] state_q;
+state_q_t state_q;
+// Next state
+state_q_t next_state_r;
 
 // Executing PC
 reg [PC_W-1:0]  pc_q;
@@ -145,42 +151,42 @@ reg [31:0]      alu_b_q;
 reg [3:0]       alu_func_q;
 
 // CSR read data
-wire [31:0]     csr_data_w;
+logic [31:0]     csr_data_w;
 
 // Instruction decode fault
 reg             invalid_inst_r;
 
 // Register indexes
-wire [4:0]      rd_w;
-wire [4:0]      rs1_w;
-wire [4:0]      rs2_w;
+logic [4:0]      rd_w;
+logic [4:0]      rs1_w;
+logic [4:0]      rs2_w;
 
 // Operand values
-wire [31:0]     rs1_val_w;
-wire [31:0]     rs2_val_w;
+logic [31:0]     rs1_val_w;
+logic [31:0]     rs2_val_w;
 
 // Opcode (memory bus)
-wire [31:0]     opcode_w;
+logic [31:0]     opcode_w;
 
-wire            opcode_valid_w;
-wire            opcode_fetch_w = mem_i_rd_o & mem_i_accept_i;
+logic            opcode_valid_w;
+logic            opcode_fetch_w;
 
 // Execute exception (or interrupt)
-wire            exception_w;
-wire [5:0]      exception_type_w;
-wire [31:0]     exception_target_w;
+logic            exception_w;
+logic [5:0]      exception_type_w;
+logic [31:0]     exception_target_w;
 
-wire [31:0]     csr_mepc_w;
+logic [31:0]     csr_mepc_w;
 
 // Load result (formatted based on load type)
 reg [31:0]      load_result_r;
 
 // Writeback enable / value
-wire            rd_writeen_w;
-wire [31:0]     rd_val_w;
+logic            rd_writeen_w;
+logic [31:0]     rd_val_w;
 
 // Memory interface
-wire             mem_misaligned_w;
+logic             mem_misaligned_w;
 reg [ADDR_W-1:0] mem_addr_q;
 reg [31:0]       mem_data_q;
 reg [3:0]        mem_wr_q;
@@ -192,11 +198,56 @@ reg             load_signed_q;
 reg             load_byte_q;
 reg             load_half_q;
 
-wire            enable_w = 1'b1;
+logic            enable_w = 1'b1;
 
-wire [31:0]     muldiv_result_w;
-wire            muldiv_ready_w;
-wire            muldiv_inst_w;
+logic [31:0]     muldiv_result_w;
+logic            muldiv_ready_w;
+logic            muldiv_inst_w;
+
+
+logic type_rvc_w;
+
+logic type_load_w;
+logic type_opimm_w;
+logic type_auipc_w;
+logic type_store_w;
+logic type_op_w;
+logic type_lui_w;
+logic type_branch_w;
+logic type_jalr_w;
+logic type_jal_w;
+logic type_system_w;
+logic type_miscm_w;
+
+logic [2:0] func3_w;
+logic [6:0] func7_w;
+
+// ALU operations excluding mul/div
+logic type_alu_op_w;
+
+// Loose decoding - gate with type_load_w on use
+logic inst_lb_w;
+logic inst_lh_w;
+logic inst_lbu_w;
+logic inst_lhu_w;
+
+logic inst_ecall_w;
+logic inst_ebreak_w;
+logic inst_mret_w;
+
+logic inst_csr_w;
+
+logic mul_inst_w;
+logic div_inst_w;
+logic inst_mul_w;
+logic inst_mulh_w;
+logic inst_mulhsu_w;
+logic inst_mulhu_w;
+logic inst_div_w;
+logic inst_divu_w;
+logic inst_rem_w;
+logic inst_remu_w;
+logic inst_nop_w;
 
 //-----------------------------------------------------------------
 // ALU
@@ -223,8 +274,12 @@ always @ (posedge clk_i)
 if (rd_writeen_w)
     reg_file[rd_q] <= rd_val_w;
 
-wire [31:0] rs1_val_gpr_w = reg_file[mem_i_inst_i[19:15]];
-wire [31:0] rs2_val_gpr_w = reg_file[mem_i_inst_i[24:20]];
+logic [31:0] rs1_val_gpr_w;
+logic [31:0] rs2_val_gpr_w;
+always_comb begin : blockName
+	rs1_val_gpr_w = reg_file[mem_i_inst_i[19:15]];
+	rs2_val_gpr_w = reg_file[mem_i_inst_i[24:20]];
+end
 
 reg [31:0] rs1_val_gpr_q;
 reg [31:0] rs2_val_gpr_q;
@@ -243,52 +298,51 @@ assign rd_writeen_w  = rd_wr_en_q & (state_q == STATE_FETCH_WB);
 
 
 `ifdef verilator
-`define HAS_REGFILE_WIRES
+`define HAS_REGFILE_logicS
 `endif
 `ifdef verilog_sim
-`define HAS_REGFILE_WIRES
+`define HAS_REGFILE_logicS
 `endif
 
 // Simulation friendly names
-`ifdef HAS_REGFILE_WIRES
-wire [31:0] x0_zero_w = reg_file[0];
-wire [31:0] x1_ra_w   = reg_file[1];
-wire [31:0] x2_sp_w   = reg_file[2];
-wire [31:0] x3_gp_w   = reg_file[3];
-wire [31:0] x4_tp_w   = reg_file[4];
-wire [31:0] x5_t0_w   = reg_file[5];
-wire [31:0] x6_t1_w   = reg_file[6];
-wire [31:0] x7_t2_w   = reg_file[7];
-wire [31:0] x8_s0_w   = reg_file[8];
-wire [31:0] x9_s1_w   = reg_file[9];
-wire [31:0] x10_a0_w  = reg_file[10];
-wire [31:0] x11_a1_w  = reg_file[11];
-wire [31:0] x12_a2_w  = reg_file[12];
-wire [31:0] x13_a3_w  = reg_file[13];
-wire [31:0] x14_a4_w  = reg_file[14];
-wire [31:0] x15_a5_w  = reg_file[15];
-wire [31:0] x16_a6_w  = reg_file[16];
-wire [31:0] x17_a7_w  = reg_file[17];
-wire [31:0] x18_s2_w  = reg_file[18];
-wire [31:0] x19_s3_w  = reg_file[19];
-wire [31:0] x20_s4_w  = reg_file[20];
-wire [31:0] x21_s5_w  = reg_file[21];
-wire [31:0] x22_s6_w  = reg_file[22];
-wire [31:0] x23_s7_w  = reg_file[23];
-wire [31:0] x24_s8_w  = reg_file[24];
-wire [31:0] x25_s9_w  = reg_file[25];
-wire [31:0] x26_s10_w = reg_file[26];
-wire [31:0] x27_s11_w = reg_file[27];
-wire [31:0] x28_t3_w  = reg_file[28];
-wire [31:0] x29_t4_w  = reg_file[29];
-wire [31:0] x30_t5_w  = reg_file[30];
-wire [31:0] x31_t6_w  = reg_file[31];
+`ifdef HAS_REGFILE_logicS
+logic [31:0] x0_zero_w = reg_file[0];
+logic [31:0] x1_ra_w   = reg_file[1];
+logic [31:0] x2_sp_w   = reg_file[2];
+logic [31:0] x3_gp_w   = reg_file[3];
+logic [31:0] x4_tp_w   = reg_file[4];
+logic [31:0] x5_t0_w   = reg_file[5];
+logic [31:0] x6_t1_w   = reg_file[6];
+logic [31:0] x7_t2_w   = reg_file[7];
+logic [31:0] x8_s0_w   = reg_file[8];
+logic [31:0] x9_s1_w   = reg_file[9];
+logic [31:0] x10_a0_w  = reg_file[10];
+logic [31:0] x11_a1_w  = reg_file[11];
+logic [31:0] x12_a2_w  = reg_file[12];
+logic [31:0] x13_a3_w  = reg_file[13];
+logic [31:0] x14_a4_w  = reg_file[14];
+logic [31:0] x15_a5_w  = reg_file[15];
+logic [31:0] x16_a6_w  = reg_file[16];
+logic [31:0] x17_a7_w  = reg_file[17];
+logic [31:0] x18_s2_w  = reg_file[18];
+logic [31:0] x19_s3_w  = reg_file[19];
+logic [31:0] x20_s4_w  = reg_file[20];
+logic [31:0] x21_s5_w  = reg_file[21];
+logic [31:0] x22_s6_w  = reg_file[22];
+logic [31:0] x23_s7_w  = reg_file[23];
+logic [31:0] x24_s8_w  = reg_file[24];
+logic [31:0] x25_s9_w  = reg_file[25];
+logic [31:0] x26_s10_w = reg_file[26];
+logic [31:0] x27_s11_w = reg_file[27];
+logic [31:0] x28_t3_w  = reg_file[28];
+logic [31:0] x29_t4_w  = reg_file[29];
+logic [31:0] x30_t5_w  = reg_file[30];
+logic [31:0] x31_t6_w  = reg_file[31];
 `endif
 
 //-----------------------------------------------------------------
 // Next State Logic
 //-----------------------------------------------------------------
-reg [STATE_W-1:0] next_state_r;
 always @ *
 begin
     next_state_r = state_q;
@@ -379,52 +433,55 @@ assign opcode_valid_w = SUPPORT_BRAM_REGFILE ? opcode_valid_q : mem_i_valid_i;
 assign rs1_w        = opcode_w[19:15];
 assign rs2_w        = opcode_w[24:20];
 assign rd_w         = opcode_w[11:7];
+					   
+always_comb begin
+	opcode_fetch_w	= mem_i_rd_o & mem_i_accept_i;
+	type_rvc_w		= (opcode_w[1:0] != 2'b11);
 
-wire type_rvc_w     = (opcode_w[1:0] != 2'b11);
+	type_load_w		= (opcode_w[6:2] == 5'b00000);
+	type_opimm_w	= (opcode_w[6:2] == 5'b00100);
+	type_auipc_w	= (opcode_w[6:2] == 5'b00101);
+	type_store_w	= (opcode_w[6:2] == 5'b01000);
+	type_op_w		= (opcode_w[6:2] == 5'b01100);
+	type_lui_w		= (opcode_w[6:2] == 5'b01101);
+	type_branch_w	= (opcode_w[6:2] == 5'b11000);
+	type_jalr_w		= (opcode_w[6:2] == 5'b11001);
+	type_jal_w		= (opcode_w[6:2] == 5'b11011);
+	type_system_w	= (opcode_w[6:2] == 5'b11100);
+	type_miscm_w	= (opcode_w[6:2] == 5'b00011);
 
-wire type_load_w    = (opcode_w[6:2] == 5'b00000);
-wire type_opimm_w   = (opcode_w[6:2] == 5'b00100);
-wire type_auipc_w   = (opcode_w[6:2] == 5'b00101);
-wire type_store_w   = (opcode_w[6:2] == 5'b01000);
-wire type_op_w      = (opcode_w[6:2] == 5'b01100);
-wire type_lui_w     = (opcode_w[6:2] == 5'b01101);
-wire type_branch_w  = (opcode_w[6:2] == 5'b11000);
-wire type_jalr_w    = (opcode_w[6:2] == 5'b11001);
-wire type_jal_w     = (opcode_w[6:2] == 5'b11011);
-wire type_system_w  = (opcode_w[6:2] == 5'b11100);
-wire type_miscm_w   = (opcode_w[6:2] == 5'b00011);
+	func3_w  = opcode_w[14:12]; // R, I, S
+	func7_w  = opcode_w[31:25]; // R
 
-wire [2:0] func3_w  = opcode_w[14:12]; // R, I, S
-wire [6:0] func7_w  = opcode_w[31:25]; // R
+	// ALU operations excluding mul/div
+	type_alu_op_w  = (type_op_w && (func7_w == 7'b0000000)) ||
+						  (type_op_w && (func7_w == 7'b0100000));
 
-// ALU operations excluding mul/div
-wire type_alu_op_w  = (type_op_w && (func7_w == 7'b0000000)) ||
-                      (type_op_w && (func7_w == 7'b0100000));
+	// Loose decoding - gate with type_load_w on use
+	inst_lb_w       = (func3_w == 3'b000);
+	inst_lh_w       = (func3_w == 3'b001);
+	inst_lbu_w      = (func3_w == 3'b100);
+	inst_lhu_w      = (func3_w == 3'b101);
 
-// Loose decoding - gate with type_load_w on use
-wire inst_lb_w       = (func3_w == 3'b000);
-wire inst_lh_w       = (func3_w == 3'b001);
-wire inst_lbu_w      = (func3_w == 3'b100);
-wire inst_lhu_w      = (func3_w == 3'b101);
+	inst_ecall_w    = SUPPORT_CSR && type_system_w && (opcode_w[31:7] == 25'h000000);
+	inst_ebreak_w   = SUPPORT_CSR && type_system_w && (opcode_w[31:7] == 25'h002000);
+	inst_mret_w     = SUPPORT_CSR && type_system_w && (opcode_w[31:7] == 25'h604000);
 
-wire inst_ecall_w    = SUPPORT_CSR && type_system_w && (opcode_w[31:7] == 25'h000000);
-wire inst_ebreak_w   = SUPPORT_CSR && type_system_w && (opcode_w[31:7] == 25'h002000);
-wire inst_mret_w     = SUPPORT_CSR && type_system_w && (opcode_w[31:7] == 25'h604000);
+	inst_csr_w      = SUPPORT_CSR && type_system_w && (func3_w != 3'b000 && func3_w != 3'b100);
 
-wire inst_csr_w      = SUPPORT_CSR && type_system_w && (func3_w != 3'b000 && func3_w != 3'b100);
-
-wire mul_inst_w      = SUPPORT_MUL && type_op_w && (func7_w == 7'b0000001) && ~func3_w[2];
-wire div_inst_w      = SUPPORT_DIV && type_op_w && (func7_w == 7'b0000001) &&  func3_w[2];
-wire inst_mul_w      = mul_inst_w && (func3_w == 3'b000);
-wire inst_mulh_w     = mul_inst_w && (func3_w == 3'b001);
-wire inst_mulhsu_w   = mul_inst_w && (func3_w == 3'b010);
-wire inst_mulhu_w    = mul_inst_w && (func3_w == 3'b011);
-wire inst_div_w      = div_inst_w && (func3_w == 3'b100);
-wire inst_divu_w     = div_inst_w && (func3_w == 3'b101);
-wire inst_rem_w      = div_inst_w && (func3_w == 3'b110);
-wire inst_remu_w     = div_inst_w && (func3_w == 3'b111);
-wire inst_nop_w      = (type_miscm_w && (func3_w == 3'b000)) | // fence
-                       (type_miscm_w && (func3_w == 3'b001));  // fence.i
+	mul_inst_w      = SUPPORT_MUL && type_op_w && (func7_w == 7'b0000001) && ~func3_w[2];
+	div_inst_w      = SUPPORT_DIV && type_op_w && (func7_w == 7'b0000001) &&  func3_w[2];
+	inst_mul_w      = mul_inst_w && (func3_w == 3'b000);
+	inst_mulh_w     = mul_inst_w && (func3_w == 3'b001);
+	inst_mulhsu_w   = mul_inst_w && (func3_w == 3'b010);
+	inst_mulhu_w    = mul_inst_w && (func3_w == 3'b011);
+	inst_div_w      = div_inst_w && (func3_w == 3'b100);
+	inst_divu_w     = div_inst_w && (func3_w == 3'b101);
+	inst_rem_w      = div_inst_w && (func3_w == 3'b110);
+	inst_remu_w     = div_inst_w && (func3_w == 3'b111);
+	inst_nop_w      = (type_miscm_w && (func3_w == 3'b000)) | // fence
+						   (type_miscm_w && (func3_w == 3'b001));  // fence.i
+end
 
 assign muldiv_inst_w = mul_inst_w | div_inst_w;
 
@@ -562,9 +619,10 @@ end
 //-----------------------------------------------------------------
 // Branches
 //-----------------------------------------------------------------
-wire        branch_w;
-wire [31:0] branch_target_w;
-wire [31:0] pc_ext_w = {{PC_EXT_W{1'b0}}, pc_q};
+logic        branch_w;
+logic [31:0] branch_target_w;
+logic [31:0] pc_ext_w;
+assign pc_ext_w = {{PC_EXT_W{1'b0}}, pc_q};
 
 uriscv_branch
 u_branch
@@ -661,26 +719,29 @@ else if (state_q == STATE_FETCH_WB)
 //-----------------------------------------------------------------
 // Execute: Branch / exceptions
 //-----------------------------------------------------------------
-wire [31:0] boot_vector_w = reset_vector_i;
+logic [31:0] boot_vector_w;
+assign boot_vector_w = reset_vector_i;
 
-always @ (posedge clk_i )
-if (rst_i)
-    pc_q        <= boot_vector_w[PC_W-1:0];
-else if (state_q == STATE_RESET)
-    pc_q        <= boot_vector_w[PC_W-1:0];
-else if (opcode_valid_w)
-begin
-    // Exception / Break / ecall (branch to ISR)
-    if (exception_w || inst_ebreak_w || inst_ecall_w) 
-        pc_q    <= exception_target_w[PC_W-1:0];
-    // MRET (branch to EPC)
-    else if (inst_mret_w) 
-        pc_q    <= csr_mepc_w;
-    // Branch
-    else if (branch_w)
-        pc_q    <= branch_target_w[PC_W-1:0];
-    else
-        pc_q    <= pc_q + `PC_W'd4;
+always_ff @ (posedge clk_i ) begin
+	if (rst_i)
+		pc_q        <= boot_vector_w[PC_W-1:0];
+	else if (state_q == STATE_RESET)
+		pc_q        <= boot_vector_w[PC_W-1:0];
+	else if (opcode_valid_w)
+	begin
+		// Exception / Break / ecall (branch to ISR)
+		if (exception_w || inst_ebreak_w || inst_ecall_w) 
+			pc_q    <= exception_target_w[PC_W-1:0];
+		// MRET (branch to EPC)
+		else if (inst_mret_w) 
+			pc_q    <= csr_mepc_w;
+		// Branch
+		else if (branch_w)
+			pc_q    <= branch_target_w[PC_W-1:0];
+		else
+			pc_q    <= pc_q + `PC_W'd4;
+	end else 
+		pc_q    	<= pc_q;
 end
 
 
@@ -693,10 +754,10 @@ assign mem_i_pc_o = pc_ext_w;
 //-----------------------------------------------------------------
 // Execute: Memory operations
 //-----------------------------------------------------------------
-wire         mem_rd_w;
-wire [3:0]   mem_wr_w;
-wire [31:0]  mem_addr_w;
-wire [31:0]  mem_data_w;
+logic         mem_rd_w;
+logic [3:0]   mem_wr_w;
+logic [31:0]  mem_addr_w;
+logic [31:0]  mem_data_w;
 
 uriscv_lsu
 #( .SUPPORT_TRAP_LSU_ALIGN(SUPPORT_TRAP_LSU_ALIGN) )
@@ -920,5 +981,4 @@ endfunction
 `endif
 
 
-
-endmodule
+endmodule : riscv_core
