@@ -276,7 +276,7 @@ if (rd_writeen_w)
 
 logic [31:0] rs1_val_gpr_w;
 logic [31:0] rs2_val_gpr_w;
-always_comb begin : blockName
+always_comb begin
 	rs1_val_gpr_w = reg_file[mem_i_inst_i[19:15]];
 	rs2_val_gpr_w = reg_file[mem_i_inst_i[24:20]];
 end

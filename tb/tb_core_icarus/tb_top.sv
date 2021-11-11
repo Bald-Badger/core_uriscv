@@ -58,12 +58,7 @@ logic          mem_d_ack_w;
 logic          mem_d_error_w;
 logic [ 10:0]  mem_d_resp_tag_w;
 
-riscv_core
-u_dut
-//-----------------------------------------------------------------
-// Ports
-//-----------------------------------------------------------------
-(
+riscv_core proc_ref (
     // Inputs
      .clk_i(clk)
     ,.rst_i(rst)
@@ -77,7 +72,7 @@ u_dut
     ,.mem_i_error_i(mem_i_error_w)
     ,.mem_i_inst_i(mem_i_inst_w)
     ,.intr_i(1'b0)
-    ,.reset_vector_i(32'h80000000)
+    ,.reset_vector_i(32'h00000000)
     ,.cpu_id_i('b0)
 
     // Outputs
@@ -96,9 +91,7 @@ u_dut
     ,.mem_i_pc_o(mem_i_pc_w)
 );
 
-tcm_mem
-u_mem
-(
+tcm_mem mem_ref (
     // Inputs
      .clk_i(clk)
     ,.rst_i(rst)
@@ -127,5 +120,16 @@ u_mem
     ,.mem_d_error_o(mem_d_error_w)
     ,.mem_d_resp_tag_o(mem_d_resp_tag_w)
 );
+
+// reg debug wire
+logic reg_wren_ref;
+logic[4:0] reg_wr_addr;
+logic[31:0] rd_data_ref;
+assign reg_wren_ref = proc_ref.rd_writeen_w;
+assign reg_wr_addr = proc_ref.rd_q;
+assign rd_data_ref = proc_ref.rd_val_w;
+
+// mem debug wire
+logic mem_wren_ref, mem_rden_ref;
 
 endmodule
