@@ -3,14 +3,12 @@ module tb_top;
 reg clk;
 reg rst;
 
-reg [7:0] mem[0:65535];
+reg [7:0] mem_ref[0:65535];
 integer i;
 integer f;
 
 initial
 begin
-    $display("Starting bench");
-
     // Reset
     clk = 0;
     rst = 1;
@@ -19,12 +17,12 @@ begin
 
     // Load TCM memory
     for (i=0;i<65535;i=i+1)
-        mem[i] = 0;
+        mem_ref[i] = 0;
 
     f = $fopen("tcm.bin","r");
-    i = $fread(mem, f);
+    i = $fread(mem_ref, f);
     for (i=0;i<65535;i=i+1)
-        u_mem.write(i, mem[i]);
+        mem_inst_ref.write(i, mem_ref[i]);
 end
 
 initial
@@ -91,7 +89,7 @@ riscv_core proc_ref (
     ,.mem_i_pc_o(mem_i_pc_w)
 );
 
-tcm_mem mem_ref (
+tcm_mem mem_inst_ref (
     // Inputs
      .clk_i(clk)
     ,.rst_i(rst)
@@ -129,7 +127,10 @@ assign reg_wren_ref = proc_ref.rd_writeen_w;
 assign reg_wr_addr = proc_ref.rd_q;
 assign rd_data_ref = proc_ref.rd_val_w;
 
-// mem debug wire
-logic mem_wren_ref, mem_rden_ref;
+always_ff @(negedge clk) begin : ref_log
+	if (reg_wren_ref) begin
+		$display("Write reg: %d, value: %h", reg_wr_addr, rd_data_ref);
+	end
+end
 
 endmodule

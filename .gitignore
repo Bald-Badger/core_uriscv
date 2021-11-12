@@ -7,3 +7,6 @@ workspace.code-workspace
 *.bin
 *.wlf
 *.mpf_new
+*.xml
+*.iml
+*.mif
