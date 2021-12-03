@@ -126,7 +126,7 @@ typedef enum logic[STATE_W-1:0] {
 
 
 //-----------------------------------------------------------------
-// Registers
+// reg_file
 //-----------------------------------------------------------------
 
 // Current state
@@ -268,11 +268,32 @@ uriscv_alu alu
 //-----------------------------------------------------------------
 // Register file
 //-----------------------------------------------------------------
+integer i;
 reg [31:0] reg_file[0:31];
+always_ff @(posedge clk_i or posedge rst_i) begin
+		if (rst_i) begin
+			for (i = 0; i < 32; i++) begin
+				if (i == 2) // SP
+					reg_file[i] <= 32'h0000_3ffc;
+				else if (i == 3) //GP
+					reg_file[i] <= 32'h0000_1800;
+				else
+					reg_file[i] <= 32'b0;
+			end
+		end else begin
+			for (i = 0; i < 32; i++) begin
+				if ((i == rd_q) && (rd_writeen_w)) begin
+					reg_file[i] <= rd_val_w;
+				end else begin
+					reg_file[i] <= reg_file[i];
+				end
+			end
+		end
+end
 
-always @ (posedge clk_i)
-if (rd_writeen_w)
-    reg_file[rd_q] <= rd_val_w;
+//always @ (posedge clk_i)
+//if (rd_writeen_w)
+    //reg_file[rd_q] <= rd_val_w;
 
 logic [31:0] rs1_val_gpr_w;
 logic [31:0] rs2_val_gpr_w;
@@ -864,7 +885,7 @@ u_csr
     // Used on memory alignment errors
     ,.mem_addr_i(mem_addr_w)
 
-    // CSR registers
+    // CSR reg_file
     ,.csr_mepc_o(csr_mepc_w)
 
     // Exception entry

@@ -7,6 +7,15 @@ reg [7:0] mem_ref[0:65535];
 integer i;
 integer f;
 
+
+function logic[31:0] swap_endian;
+	input logic[31:0] data;
+	return	{{data[7:0]},
+			{data[15:8]},
+			{data[23:16]},
+			{data[31:24]}};
+endfunction
+
 initial
 begin
     // Reset
@@ -19,7 +28,7 @@ begin
     for (i=0;i<65535;i=i+1)
         mem_ref[i] = 0;
 
-    f = $fopen("tcm.bin","r");
+    f = $fopen("instr.bin","r");
     i = $fread(mem_ref, f);
     for (i=0;i<65535;i=i+1)
         mem_inst_ref.write(i, mem_ref[i]);
