@@ -23952,3 +23952,87 @@ run -all
 # Write reg:  1, value: 0000001c
 # Write reg:  1, value: 00000024
 # Write reg:  1, value: 0000001c
+restart
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# Loading work.tb_top(fast)
+# Loading work.riscv_core(fast)
+# Loading work.uriscv_muldiv(fast)
+# Loading work.uriscv_alu(fast)
+# Loading work.uriscv_branch(fast)
+# Loading work.uriscv_lsu(fast)
+# Loading work.uriscv_csr(fast)
+# Loading work.tcm_mem(fast)
+# Loading work.tcm_mem_ram(fast)
+run
+run
+run
+# Write reg:  0, value: 00000000
+run
+# Write reg:  2, value: 00003fdc
+run
+run
+run
+run
+run
+# Write reg:  8, value: 00003ffc
+run
+# Write reg: 15, value: 00000022
+run
+run
+run
+# Write reg: 10, value: 00000009
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+run
+# Write reg:  1, value: 0000001c
+run
+# Write reg:  1, value: 00000024
+# ** Error: Acs sdne.
+# 
+#        Unable to replace existing ini file (C:/Users/Shuai/GoogleDrive/Projects/riscy/ref/core_uriscv/sim/riscy_ref.mpf).  File can not be renamed.
+# ** Error: Acs sdne.
+# 
+#        Unable to replace existing ini file (C:/Users/Shuai/GoogleDrive/Projects/riscy/ref/core_uriscv/sim/riscy_ref.mpf).  File can not be renamed.
+# ** Error: Acs sdne.
+# 
+#        Unable to replace existing ini file (C:/Users/Shuai/GoogleDrive/Projects/riscy/ref/core_uriscv/sim/riscy_ref.mpf).  File can not be renamed.
+# End time: 04:04:57 on Dec 03,2021, Elapsed time: 1:25:53
+# Errors: 3, Warnings: 1
