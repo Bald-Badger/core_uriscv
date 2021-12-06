@@ -1,3 +1,5 @@
+import defines::*;
+
 module ref_hier(
 	input reg clk,
 	input reg rst
@@ -19,28 +21,35 @@ begin
 		mem_inst_ref.write(i, mem_ref[i]);
 end
 
-logic          mem_i_rd_w;
-logic          mem_i_flush_w;
-logic          mem_i_invalidate_w;
-logic [ 31:0]  mem_i_pc_w;
-logic [ 31:0]  mem_d_addr_w;
-logic [ 31:0]  mem_d_data_wr_w;
-logic          mem_d_rd_w;
-logic [  3:0]  mem_d_wr_w;
-logic          mem_d_cacheable_w;
-logic [ 10:0]  mem_d_req_tag_w;
-logic          mem_d_invalidate_w;
-logic          mem_d_writeback_w;
-logic          mem_d_flush_w;
-logic          mem_i_accept_w;
-logic          mem_i_valid_w;
-logic          mem_i_error_w;
-logic [ 31:0]  mem_i_inst_w;
-logic [ 31:0]  mem_d_data_rd_w;
-logic          mem_d_accept_w;
-logic          mem_d_ack_w;
-logic          mem_d_error_w;
-logic [ 10:0]  mem_d_resp_tag_w;
+data_t			debug_pc;
+instr_t			debug_instr;
+always_comb begin : debug_wire_assign
+	debug_pc = core_ref.pc_q;
+	debug_instr = instr_t'(core_ref.mem_i_inst_i);
+end
+
+logic			mem_i_rd_w;
+logic			mem_i_flush_w;
+logic			mem_i_invalidate_w;
+logic	[ 31:0]	mem_i_pc_w;
+logic	[ 31:0]	mem_d_addr_w;
+logic	[ 31:0]	mem_d_data_wr_w;
+logic			mem_d_rd_w;
+logic	[  3:0]	mem_d_wr_w;
+logic			mem_d_cacheable_w;
+logic	[ 10:0]	mem_d_req_tag_w;
+logic			mem_d_invalidate_w;
+logic			mem_d_writeback_w;
+logic			mem_d_flush_w;
+logic			mem_i_accept_w;
+logic			mem_i_valid_w;
+logic			mem_i_error_w;
+logic	[ 31:0]	mem_i_inst_w;
+logic	[ 31:0]	mem_d_data_rd_w;
+logic			mem_d_accept_w;
+logic			mem_d_ack_w;
+logic			mem_d_error_w;
+logic	[ 10:0]	mem_d_resp_tag_w;
 
 riscv_core core_ref (
 	// Inputs
