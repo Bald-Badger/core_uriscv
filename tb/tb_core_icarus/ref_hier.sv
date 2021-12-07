@@ -27,6 +27,7 @@ always_comb begin : debug_wire_assign
 	debug_pc = core_ref.pc_q;
 	debug_instr = instr_t'(core_ref.mem_i_inst_i);
 end
+logic[XLEN-1:0] boot_pc [0:0];
 
 logic			mem_i_rd_w;
 logic			mem_i_flush_w;
@@ -65,7 +66,7 @@ riscv_core core_ref (
 	,.mem_i_error_i(mem_i_error_w)
 	,.mem_i_inst_i(mem_i_inst_w)
 	,.intr_i(1'b0)
-	,.reset_vector_i(32'h00000000)
+	,.reset_vector_i(boot_pc[0])
 	,.cpu_id_i('b0)
 
 	// Outputs
@@ -113,5 +114,19 @@ tcm_mem mem_inst_ref (
 	,.mem_d_error_o(mem_d_error_w)
 	,.mem_d_resp_tag_o(mem_d_resp_tag_w)
 );
+
+// synopsys translate_off
+	initial begin
+		if (BOOT_TYPE == BINARY_BOOT) begin
+			$readmemh("boot.cfg", boot_pc);
+			$display("REF: booy mode: binary");
+			$display("REF: booting from pc = %h", boot_pc[0]);
+		end else if (BOOT_TYPE == RARS_BOOT) begin
+			boot_pc[0] = 32'b0;
+			$display("REF: booy mode: RARS");
+			$display("REF: booting from pc = %h", 0);
+		end
+	end
+// synopsys translate_on
 
 endmodule: ref_hier
