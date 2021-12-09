@@ -1,4 +1,5 @@
 import defines::*;
+import mem_defines::*;
 
 module ref_hier(
 	input reg clk,
@@ -17,7 +18,8 @@ begin
 
 	f = $fopen("instr.bin","r");
 	i = $fread(mem_ref, f);
-	for (i=0;i<65535;i=i+1)
+	$display("REF: initializing simulation memory, this may take a while...");
+	for (i=0;i<MAX_PHY_ADDR;i=i+1)
 		mem_inst_ref.write(i, mem_ref[i]);
 end
 
@@ -119,11 +121,11 @@ tcm_mem mem_inst_ref (
 	initial begin
 		if (BOOT_TYPE == BINARY_BOOT) begin
 			$readmemh("boot.cfg", boot_pc);
-			$display("REF: booy mode: binary");
+			$display("REF: boot mode: binary");
 			$display("REF: booting from pc = %h", boot_pc[0]);
 		end else if (BOOT_TYPE == RARS_BOOT) begin
 			boot_pc[0] = 32'b0;
-			$display("REF: booy mode: RARS");
+			$display("REF: boot mode: RARS");
 			$display("REF: booting from pc = %h", 0);
 		end
 	end

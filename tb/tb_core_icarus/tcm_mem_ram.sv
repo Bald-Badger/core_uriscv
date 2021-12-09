@@ -1,3 +1,5 @@
+import defines::*;
+import mem_defines::*;
 
 module tcm_mem_ram
 (
@@ -25,7 +27,8 @@ module tcm_mem_ram
 // Mode: Read First
 //-----------------------------------------------------------------
 /* verilator lint_off MULTIDRIVEN */
-reg [31:0]   ram [0:16383] /*verilator public*/;
+// 32MB ram on fpga
+reg [31:0]   ram [0:MAX_PHY_ADDR/BYTES] /*verilator public*/;
 /* verilator lint_on MULTIDRIVEN */
 
 reg [31:0] ram_read0_q;
