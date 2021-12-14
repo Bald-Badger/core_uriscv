@@ -13,12 +13,13 @@ integer f;
 initial
 begin
 	// Load TCM memory
+	$display("REF: initializing simulation memory, this may take a while...");
 	for (i=0;i<65535;i=i+1)
 		mem_ref[i] = 0;
 
 	f = $fopen("instr.bin","r");
 	i = $fread(mem_ref, f);
-	$display("REF: initializing simulation memory, this may take a while...");
+	
 	for (i=0;i<MAX_PHY_ADDR;i=i+1)
 		mem_inst_ref.write(i, mem_ref[i]);
 end
