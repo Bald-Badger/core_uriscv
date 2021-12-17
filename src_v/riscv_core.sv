@@ -55,6 +55,9 @@ module riscv_core
     // Reset (active high)
     ,input           rst_i
 
+    // stop the processor
+    ,input           kill
+    
     // External interrupt (M_EXT)
     ,input           intr_i
 
@@ -427,6 +430,8 @@ end
 always @ (posedge clk_i )
 if (rst_i)
     state_q   <= STATE_RESET;
+else if (kill)
+    state_q   <= state_q;
 else
     state_q   <= next_state_r;
 

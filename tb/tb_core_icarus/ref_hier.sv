@@ -3,7 +3,8 @@ import mem_defines::*;
 
 module ref_hier(
 	input reg clk,
-	input reg rst
+	input reg rst,
+	input kill
 );
 
 reg [7:0] mem_ref[0:65535];
@@ -59,6 +60,7 @@ riscv_core core_ref (
 	// Inputs
 	 .clk_i(clk)
 	,.rst_i(rst)
+	,.kill(kill)
 	,.mem_d_data_rd_i(mem_d_data_rd_w)
 	,.mem_d_accept_i(mem_d_accept_w)
 	,.mem_d_ack_i(mem_d_ack_w)
