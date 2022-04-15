@@ -18,7 +18,7 @@ begin
 	for (i=0;i<65535;i=i+1)
 		mem_ref[i] = 0;
 
-	f = $fopen("instr.bin","r");
+	f = $fopen("instr.bin","rb");
 	i = $fread(mem_ref, f);
 	
 	for (i=0;i<MAX_PHY_ADDR;i=i+1)
