@@ -7,24 +7,6 @@ module ref_hier(
 	input kill
 );
 
-reg [7:0] mem_ref[0:65535];
-integer i;
-integer f;
-
-initial
-begin
-	// Load TCM memory
-	$display("REF: initializing simulation memory, this may take a while...");
-	for (i=0;i<65535;i=i+1)
-		mem_ref[i] = 0;
-
-	f = $fopen("instr.bin","rb");
-	i = $fread(mem_ref, f);
-	
-	for (i=0;i<MAX_PHY_ADDR;i=i+1)
-		mem_inst_ref.write(i, mem_ref[i]);
-end
-
 data_t			debug_pc;
 instr_t			debug_instr;
 always_comb begin : debug_wire_assign
@@ -71,7 +53,7 @@ riscv_core core_ref (
 	,.mem_i_error_i(mem_i_error_w)
 	,.mem_i_inst_i(mem_i_inst_w)
 	,.intr_i(1'b0)
-	,.reset_vector_i(boot_pc[0])
+	,.reset_vector_i(boot_pc[0] * 4 + 32'h10000)
 	,.cpu_id_i('b0)
 
 	// Outputs
@@ -125,7 +107,7 @@ tcm_mem mem_inst_ref (
 		if (BOOT_TYPE == BINARY_BOOT) begin
 			$readmemh("boot.cfg", boot_pc);
 			$display("REF: boot mode: binary");
-			$display("REF: booting from pc = %h", boot_pc[0]);
+			$display("REF: booting from pc = %h", (boot_pc[0] + 32'h10000));
 		end else if (BOOT_TYPE == RARS_BOOT) begin
 			boot_pc[0] = 32'b0;
 			$display("REF: boot mode: RARS");
