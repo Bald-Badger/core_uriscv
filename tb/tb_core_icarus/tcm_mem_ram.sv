@@ -30,6 +30,7 @@ module tcm_mem_ram # (
 /* verilator lint_off MULTIDRIVEN */
 // 32MB ram on fpga
 reg [31:0]   ram [0 : (MAX_PHY_ADDR + 1)/BYTES] /*verilator public*/;
+reg [31:0]   ram_init [0 : (MAX_PHY_ADDR + 1)/BYTES] /*verilator public*/;
 /* verilator lint_on MULTIDRIVEN */
 
 
@@ -44,14 +45,12 @@ initial begin
 				$error("failed to open boot file\n");
 				$stop();
 			end
-			s = $fread(ram, fp);
+			s = $fread(ram_init, fp);
 			$fclose(fp);
 
 			// RISCV binary should load to VA (in this case also PA) 0x10000
-			// moving data to its offset position and earsing them
-			for (i = 0; i < 20'h10000/4; i++) begin
-				ram[20'h0x10000/4 + i] = swap_endian(ram [i]);
-				ram[i] = 0;
+			for (i = 0; i < 2**ADDR_WIDTH - 20'h0x10000/4; i++) begin
+				ram[20'h0x10000/4 + i] = ram_init [i];
 			end
 		end
 		
