@@ -107,7 +107,7 @@ tcm_mem mem_inst_ref (
 		if (BOOT_TYPE == BINARY_BOOT) begin
 			$readmemh("boot.cfg", boot_pc);
 			$display("REF: boot mode: binary");
-			$display("REF: booting from pc = %h", (boot_pc[0] + 32'h10000));
+			$display("REF: booting from pc = %h", (boot_pc[0] * 4 + 32'h10000));
 		end else if (BOOT_TYPE == RARS_BOOT) begin
 			boot_pc[0] = 32'b0;
 			$display("REF: boot mode: RARS");

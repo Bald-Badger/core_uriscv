@@ -2,7 +2,7 @@ import defines::*;
 import mem_defines::*;
 
 module tcm_mem_ram # (
-	parameter   ADDR_WIDTH = $clog2(MAX_PHY_ADDR+1)
+	parameter   ADDR_WIDTH = 16
 ) (
 	// Inputs
 	 input						clk0_i
@@ -29,8 +29,9 @@ module tcm_mem_ram # (
 //-----------------------------------------------------------------
 /* verilator lint_off MULTIDRIVEN */
 // 32MB ram on fpga
-reg [31:0]   ram [0 : (MAX_PHY_ADDR + 1)/BYTES] /*verilator public*/;
-reg [31:0]   ram_init [0 : (MAX_PHY_ADDR + 1)/BYTES] /*verilator public*/;
+localparam VALID_ADDR_WIDTH = ADDR_WIDTH - 2;
+reg [31:0]   ram [0 : 2 ** VALID_ADDR_WIDTH - 1] /*verilator public*/;
+reg [31:0]   ram_init [0 : 2 ** VALID_ADDR_WIDTH - 1] /*verilator public*/;
 /* verilator lint_on MULTIDRIVEN */
 
 

@@ -35,26 +35,26 @@ module tcm_mem
 //-------------------------------------------------------------
 wire [31:0] data_r_w;
 
-tcm_mem_ram
-u_ram
-(
+tcm_mem_ram # (
+    .ADDR_WIDTH (26)
+) u_ram (
     // Instruction fetch
-     .clk0_i(clk_i)
-    ,.rst0_i(rst_i)
-    ,.addr0_i(mem_i_pc_i[31:2])
-    ,.data0_i(32'b0)
-    ,.wr0_i(4'b0)
+     .clk0_i    (clk_i)
+    ,.rst0_i    (rst_i)
+    ,.addr0_i   (mem_i_pc_i[31:2])
+    ,.data0_i   (32'b0)
+    ,.wr0_i     (4'b0)
 
     // External access / Data access
-    ,.clk1_i(clk_i)
-    ,.rst1_i(rst_i)
-    ,.addr1_i(mem_d_addr_i[31:2])
-    ,.data1_i(mem_d_data_wr_i)
-    ,.wr1_i(mem_d_wr_i)
+    ,.clk1_i    (clk_i)
+    ,.rst1_i    (rst_i)
+    ,.addr1_i   (mem_d_addr_i[31:2])
+    ,.data1_i   (mem_d_data_wr_i)
+    ,.wr1_i     (mem_d_wr_i)
 
     // Outputs
-    ,.data0_o(mem_i_inst_o)
-    ,.data1_o(data_r_w)
+    ,.data0_o   (mem_i_inst_o)
+    ,.data1_o   (data_r_w)
 );
 
 //-------------------------------------------------------------
