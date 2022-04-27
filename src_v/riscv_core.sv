@@ -31,9 +31,9 @@ module riscv_core
 // Params
 //-----------------------------------------------------------------
 #(
-     parameter SUPPORT_MUL      = 1
-    ,parameter SUPPORT_DIV      = 1
-    ,parameter SUPPORT_CSR      = 1
+     parameter SUPPORT_MUL      = 0
+    ,parameter SUPPORT_DIV      = 0
+    ,parameter SUPPORT_CSR      = 0
     ,parameter SUPPORT_TRAP_LSU_ALIGN = 1
     ,parameter SUPPORT_MTVEC    = 0
     ,parameter SUPPORT_MTVAL    = 0
@@ -43,7 +43,7 @@ module riscv_core
     ,parameter SUPPORT_MTIMECMP = 0
     ,parameter SUPPORT_TRAP_INVALID_OPC = 1
     ,parameter SUPPORT_BRAM_REGFILE = 0
-    ,parameter ISR_VECTOR       = 32'h00000010
+    ,parameter ISR_VECTOR       = 32'h00000000  // used to be 32'h10 for whatever reason
 )
 //-----------------------------------------------------------------
 // Ports

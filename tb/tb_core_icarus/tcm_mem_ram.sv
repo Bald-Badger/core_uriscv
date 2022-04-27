@@ -46,12 +46,21 @@ initial begin
 				$error("failed to open boot file\n");
 				$stop();
 			end
+
+			for (i = 0; i < 2**ADDR_WIDTH; i++) begin
+				ram_init[i] = 0;
+			end
+
 			s = $fread(ram_init, fp);
 			$fclose(fp);
 
 			// RISCV binary should load to VA (in this case also PA) 0x10000
 			for (i = 0; i < 2**ADDR_WIDTH - 20'h0x10000/4; i++) begin
-				ram[20'h0x10000/4 + i] = ram_init [i];
+				ram[20'h0x10000/4 + i] = swap_endian(ram_init[i]);
+			end
+
+			for (i = 0; i < 20'h0x10000/4; i++) begin
+				ram[i] = 0;
 			end
 		end
 		
