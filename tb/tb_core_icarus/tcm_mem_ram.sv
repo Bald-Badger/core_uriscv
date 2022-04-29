@@ -47,7 +47,7 @@ initial begin
 				$stop();
 			end
 
-			for (i = 0; i < 2**ADDR_WIDTH; i++) begin
+			for (i = 0; i < 2**VALID_ADDR_WIDTH; i++) begin
 				ram_init[i] = 0;
 			end
 
@@ -55,7 +55,7 @@ initial begin
 			$fclose(fp);
 
 			// RISCV binary should load to VA (in this case also PA) 0x10000
-			for (i = 0; i < 2**ADDR_WIDTH - 20'h0x10000/4; i++) begin
+			for (i = 0; i < 2**VALID_ADDR_WIDTH - 20'h0x10000/4; i++) begin
 				ram[20'h0x10000/4 + i] = swap_endian(ram_init[i]);
 			end
 

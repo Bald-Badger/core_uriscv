@@ -279,12 +279,7 @@ reg [31:0] reg_file[0:31];
 always_ff @(posedge clk_i or posedge rst_i) begin
 		if (rst_i) begin
 			for (i = 0; i < 32; i++) begin
-				if (i == 2) // SP
-					reg_file[i] <= SP_BASE;
-				else if (i == 3) //GP
-					reg_file[i] <= GP_BASE;
-				else
-					reg_file[i] <= NULL;
+				reg_file[i] <= NULL;
 			end
 		end else begin
 			for (i = 0; i < 32; i++) begin
