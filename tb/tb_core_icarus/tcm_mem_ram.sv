@@ -31,7 +31,7 @@ module tcm_mem_ram # (
 // 32MB ram on fpga
 localparam VALID_ADDR_WIDTH = ADDR_WIDTH - 2;
 reg [31:0]   ram [0 : 2 ** VALID_ADDR_WIDTH - 1] /*verilator public*/;
-reg [31:0]   ram_init [0 : 2 ** VALID_ADDR_WIDTH - 1] /*verilator public*/;
+// reg [31:0]   ram_init [0 : 2 ** VALID_ADDR_WIDTH - 1] /*verilator public*/;
 /* verilator lint_on MULTIDRIVEN */
 
 
@@ -48,12 +48,13 @@ initial begin
 			end
 
 			for (i = 0; i < 2**VALID_ADDR_WIDTH; i++) begin
-				ram_init[i] = 0;
+				ram[i] = 0;
 			end
 
-			s = $fread(ram_init, fp);
+			s = $fread(ram, fp);
 			$fclose(fp);
 
+			/*
 			// RISCV binary should load to VA (in this case also PA) 0x10000
 			for (i = 0; i < 2**VALID_ADDR_WIDTH - 20'h0x10000/4; i++) begin
 				ram[20'h0x10000/4 + i] = swap_endian(ram_init[i]);
@@ -62,7 +63,10 @@ initial begin
 			for (i = 0; i < 20'h0x10000/4; i++) begin
 				ram[i] = 0;
 			end
+			*/
+
 		end
+
 		
 		RARS_BOOT: begin
 			$readmemh("instr.mc", ram);
